@@ -6,7 +6,14 @@ const fs = require("fs")
 
 
 console.log("Iniciamos o Accounts\n")
-// operation()
+
+// criando a conta
+function createAccount() {
+    console.log(chalk.bgGreen.black("Parabéns por escolher nosso Banco!"))
+    console.log(chalk.green("Defina suas opções de conta a seguir:"))
+}
+
+// operacoes disponiveis para o cliente
 function operation() {
     inquirer.prompt([{
         type: "list",
@@ -21,8 +28,11 @@ function operation() {
         ],
     }])
     .then((answer) => {
-        const action = answer["action"]
-        console.log(action)
+        const action = answer["action"] // vai pegar a escolha do usuario
+        // console.log(action)
+        if(action === "Criar Conta") {
+            createAccount()
+        }
     })
     .catch((err) => console.log(err))
 }
