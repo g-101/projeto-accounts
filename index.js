@@ -52,6 +52,35 @@ function showCreateAcc() {
     buildAcc()
 }
 
+function checkAcc(accName){
+    if( fs.existsSync(`accounts/${accName}.json`) ) {
+        return true
+    }
+    console.log(chalk.bgRed.black("Esta conta não existe!"))
+    return false
+}
+// deposito do cliente
+function deposit() {
+    // primeiro saber qual a conta que fara o deposito
+    inquirer.prompt([
+        { 
+            name: "accName",
+            message: "Qual o nome da sua conta?",
+        },    
+    ])
+    .then((answer) => {
+        //verificar se a conta existe
+        const accName = answer["accName"]
+        //verifica se a conta existe para fazer o deposito
+        if(!checkAcc(accName)) {
+            // se não existir chama o menu do deposito
+            return deposit()
+        }
+    })
+    .catch((err) => console.log(err))
+
+}
+
 // operacoes disponiveis para o cliente
 function operation() {
     inquirer.prompt([{
@@ -68,10 +97,24 @@ function operation() {
     }])
     .then((answer) => {
         const action = answer["action"] // vai pegar a escolha do usuario
-        // console.log(action)
-        if(action === "Criar Conta") {
-            showCreateAcc()
+        switch(action) {
+            case "Criar Conta":
+                showCreateAcc()
+                break
+            case "Consultar Saldo":
+                console.log("implementando")
+                break
+            case "Depositar":
+                console.log("implementando")
+                break 
+            case "Sacar":
+                console.log("implementando")
+                break         
+            case "Sair":
+                console.log(chalk.bgBlue.black("Obrigado por usar o Accounts"))
+                process.exit() 
         }
+
         
     })
     .catch((err) => console.log(err))
