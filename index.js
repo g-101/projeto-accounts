@@ -5,6 +5,77 @@ const chalk = require("chalk")
 const fs = require("fs")
 
 
+
+
+function getAcc(accName){
+    const accJSON = fs.readFileSync(`accounts/${accName}.json`, { encoding: "utf-8", flag: "r"})
+    return JSON.parse(accJSON) // retorna transformado de texto para json
+}
+
+// checa se a conta existe ou não
+function checkAcc(accName) { return fs.existsSync(`accounts/${accName}.json`) }
+
+
+function addAmount(accName, amount) {
+    // chama a função que le arquivos
+    const accData = getAcc(accName)
+    console.log(accData)
+    // se o usuario digitar nada
+    if(!amount) {
+        console.log(chalk.bgRed.black("Ocorreu um erro, tente novamente\n"))
+        return deposit()
+    }
+    accData.balance = parseFloat(amount) + parseFloat(accData.balance)
+    // vai salvar os novos dados no banco
+    fs.writeFileSync(`accounts/${accName}.json`, JSON.stringify(accData), (err) => console.log(err))
+    console.log(chalk.green(`Foi depositado R$ ${amount} na sua conta`))
+    
+}
+
+function getAcc(accName){
+    const accJSON = fs.readFileSync(`accounts/${accName}.json`, { 
+        encoding: "utf-8", 
+        flag: "r"
+    })
+    return JSON.parse(accJSON) // retorna transformado de texto para json
+}
+
+// deposito do cliente
+function deposit() {
+    // primeiro saber qual a conta que fara o deposito
+    inquirer.prompt([
+        { 
+            name: "accName",
+            message: "Digite o nome da sua conta:",
+        },    
+    ])
+    .then((answer) => {
+        //verificar se a conta existe
+        const accName = answer["accName"]
+        //verifica se a conta existe para fazer o deposito
+        if(!checkAcc(accName)) {
+            // se não existir chama o menu do deposito
+            console.log(chalk.bgRed.black("Esta conta não existe!"))
+            return deposit()
+        }
+        inquirer.prompt([
+            { 
+                name: "amount",
+                message: "Valor do déposito:",
+            },    
+        ])
+        .then((answer) => {
+            const amount = answer["amount"] // salva o valor do deposito
+            console.log(amount, accName)
+            addAmount(accName, amount)
+            operation() // chama o meu principal do banco
+        })
+        .catch((err) => console.log(err))
+    })
+    .catch((err) => console.log(err))
+
+}
+
 // criando a conta
 function buildAcc() {
     inquirer.prompt([
@@ -19,7 +90,7 @@ function buildAcc() {
         
         // verifica se o banco de dados accounts existe
         if(!fs.existsSync("accounts")) {
-            // se não existir ele cria o diretorio
+            // se não existir ele cria o diretorio do banco de dados
             fs.mkdirSync("accounts")
         }
 
@@ -28,7 +99,7 @@ function buildAcc() {
         if(fs.existsSync(`accounts/${accName}.json`)) {
             console.log(chalk.bgRed.black("Esta conta ja existe"))
             buildAcc() // chama a criação de conta novamente
-            return
+            return // caso haja um erro
         }
         // conta criada com sucesso
         fs.writeFileSync(
@@ -50,35 +121,6 @@ function showCreateAcc() {
     console.log(chalk.bgGreen.black("Parabéns por escolher nosso Banco!"))
     console.log(chalk.green("Defina suas opções de conta a seguir:"))
     buildAcc()
-}
-
-function checkAcc(accName){
-    if( fs.existsSync(`accounts/${accName}.json`) ) {
-        return true
-    }
-    console.log(chalk.bgRed.black("Esta conta não existe!"))
-    return false
-}
-// deposito do cliente
-function deposit() {
-    // primeiro saber qual a conta que fara o deposito
-    inquirer.prompt([
-        { 
-            name: "accName",
-            message: "Qual o nome da sua conta?",
-        },    
-    ])
-    .then((answer) => {
-        //verificar se a conta existe
-        const accName = answer["accName"]
-        //verifica se a conta existe para fazer o deposito
-        if(!checkAcc(accName)) {
-            // se não existir chama o menu do deposito
-            return deposit()
-        }
-    })
-    .catch((err) => console.log(err))
-
 }
 
 // operacoes disponiveis para o cliente
@@ -105,7 +147,7 @@ function operation() {
                 console.log("implementando")
                 break
             case "Depositar":
-                console.log("implementando")
+                deposit()
                 break 
             case "Sacar":
                 console.log("implementando")
