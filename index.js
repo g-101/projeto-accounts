@@ -5,8 +5,84 @@ const chalk = require("chalk")
 const fs = require("fs")
 
 
+function withdrawBalance(accName, amount) {
+    // pega as infos da conta
+    const accData = getAcc(accName)
+    // se o usuario digitar nada
+    if(!amount) {
+        console.log(chalk.bgRed.black("Ocorreu um erro, tente novamente\n"))
+        return withdraw()
+    }
+    if(accData.balance < amount || accData.balance === 0) {
+        console.log(chalk.bgRed.black("Você não possui saldo suficiente para esse valor\n"))
+        return withdraw()
+    }
+    accData.balance = parseFloat(accData.balance) - parseFloat(amount)
+    // vai salvar os novos dados no banco apos o saque
+    fs.writeFileSync(`accounts/${accName}.json`, JSON.stringify(accData), (err) => console.log(err))
+    console.log(chalk.green(`Foi sacado R$${amount.toFixed(2)} da sua conta\n`))
+    
+}
 
 
+// sacar saldo
+function withdraw() {
+    inquirer.prompt([
+        {
+            name: "accName",
+            message: "Digite o nome da sua conta:",
+        }
+    ])
+    .then((answer) => {
+        const accName = answer["accName"]
+        if(!checkAcc(accName)) {
+            console.log(chalk.bgRed.black("Esta conta não existe!\n"))
+            return withdraw()
+        }
+        inquirer.prompt([
+            { 
+                name: "amount",
+                message: "Valor do Saque R$:",
+            },
+        ])
+        .then((answer) => {
+            const amount = answer["amount"] 
+            
+            //verificar se tem saldo para sacar
+
+            //se  tiver
+            withdrawBalance(accName, amount)
+            operation()
+            
+            
+        })
+        .catch((err) => console.log)
+    })
+    .catch((err) => console.log)
+}
+
+// consultar saldo
+function getAccBalance() {
+    inquirer.prompt([
+        { 
+            name: "accName",
+            message: "Digite o nome da sua conta:",
+        },
+        
+    ]).then((answer) => {
+        const accName = answer["accName"] // nome da conta
+        // verifica se a conta existe
+        if(!checkAcc(accName)) {
+            console.log(chalk.bgRed.black("Esta conta não existe!"))
+            return getAccBalance()
+        }
+        const accData = getAcc(accName) //pega a info do saldo em json
+        console.log(chalk.bgBlue.black(`Seu saldo atual: R$ ${accData.balance.toFixed(2)}\n`))
+        operation()
+    }).catch((err) => console.log)
+}
+
+//mostra o saldo em json
 function getAcc(accName){
     const accJSON = fs.readFileSync(`accounts/${accName}.json`, { encoding: "utf-8", flag: "r"})
     return JSON.parse(accJSON) // retorna transformado de texto para json
@@ -19,7 +95,7 @@ function checkAcc(accName) { return fs.existsSync(`accounts/${accName}.json`) }
 function addAmount(accName, amount) {
     // chama a função que le arquivos
     const accData = getAcc(accName)
-    console.log(accData)
+    
     // se o usuario digitar nada
     if(!amount) {
         console.log(chalk.bgRed.black("Ocorreu um erro, tente novamente\n"))
@@ -28,7 +104,7 @@ function addAmount(accName, amount) {
     accData.balance = parseFloat(amount) + parseFloat(accData.balance)
     // vai salvar os novos dados no banco
     fs.writeFileSync(`accounts/${accName}.json`, JSON.stringify(accData), (err) => console.log(err))
-    console.log(chalk.green(`Foi depositado R$ ${amount} na sua conta`))
+    console.log(chalk.green(`Foi depositado R$ ${amount.toFixed(2)} na sua conta\n`))
     
 }
 
@@ -66,9 +142,9 @@ function deposit() {
         ])
         .then((answer) => {
             const amount = answer["amount"] // salva o valor do deposito
-            console.log(amount, accName)
+            
             addAmount(accName, amount)
-            operation() // chama o meu principal do banco
+            operation() // chama o menu principal do banco
         })
         .catch((err) => console.log(err))
     })
@@ -144,13 +220,13 @@ function operation() {
                 showCreateAcc()
                 break
             case "Consultar Saldo":
-                console.log("implementando")
+                getAccBalance()
                 break
             case "Depositar":
                 deposit()
                 break 
             case "Sacar":
-                console.log("implementando")
+                withdraw()
                 break         
             case "Sair":
                 console.log(chalk.bgBlue.black("Obrigado por usar o Accounts"))
